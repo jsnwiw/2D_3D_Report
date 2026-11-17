@@ -436,27 +436,49 @@ export function setupTopBarActions() {
         showToast('📸 <strong>3D 화면 캡처 완료!</strong> 고화질 PNG 이미지로 저장되었습니다.');
     });
 
-    // 상단 글로벌 컨트롤 바 마우스 휠 가로 스크롤 지원 (세로 휠 -> 가로 스크롤 변환)
-    const topBarRight = document.querySelector('.top-bar-right');
-    const topBar = $('top-bar');
-    if (topBarRight) {
-        topBarRight.addEventListener('wheel', (e) => {
-            if (e.deltaY !== 0) {
-                e.preventDefault();
-                topBarRight.scrollLeft += e.deltaY;
+    /**
+     * 상단 글로벌 컨트롤 바 부드러운 관성 가로 스크롤 (Inertial Smooth Momentum Scroll)
+     * - 마우스 휠 조작 시 딱딱하게 끊기지 않고 부드럽게 감속(Lerp)되며 미끄러지듯 스크롤됩니다.
+     */
+    const makeSmoothHorizontalScroll = (element) => {
+        if (!element) return;
+        let targetScroll = element.scrollLeft;
+        let isAnimating = false;
+
+        const step = () => {
+            const maxScroll = element.scrollWidth - element.clientWidth;
+            targetScroll = Math.max(0, Math.min(targetScroll, maxScroll));
+            const diff = targetScroll - element.scrollLeft;
+
+            if (Math.abs(diff) > 0.5) {
+                element.scrollLeft += diff * 0.2;
+                requestAnimationFrame(step);
+            } else {
+                element.scrollLeft = targetScroll;
+                isAnimating = false;
             }
-        }, { passive: false });
-    }
-    if (topBar) {
-        topBar.addEventListener('wheel', (e) => {
-            if (!e.target.closest('.top-bar-right') && topBar.scrollWidth > topBar.clientWidth) {
-                if (e.deltaY !== 0) {
-                    e.preventDefault();
-                    topBar.scrollLeft += e.deltaY;
+        };
+
+        element.addEventListener('wheel', (e) => {
+            const delta = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
+            if (delta !== 0) {
+                e.preventDefault();
+                if (!isAnimating) {
+                    targetScroll = element.scrollLeft;
+                }
+                targetScroll += delta * 1.15;
+                if (!isAnimating) {
+                    isAnimating = true;
+                    requestAnimationFrame(step);
                 }
             }
         }, { passive: false });
-    }
+    };
+
+    const topBarRight = document.querySelector('.top-bar-right');
+    const topBar = $('top-bar');
+    if (topBarRight) makeSmoothHorizontalScroll(topBarRight);
+    if (topBar) makeSmoothHorizontalScroll(topBar);
 }
 
 /**
