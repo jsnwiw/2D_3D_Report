@@ -14,7 +14,7 @@ export const COLORS = [
 
 let dataTableClickHandlerBound = false;
 
-if (window.Chart) {
+if (typeof window !== 'undefined' && window.Chart) {
     Chart.defaults.font.family = "'Pretendard', -apple-system, BlinkMacSystemFont, 'Malgun Gothic', sans-serif";
 }
 

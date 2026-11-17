@@ -23,7 +23,7 @@
 
 ---
 
-## ⚡ 차세대 GPU 그래픽스 아키텍처 (Vulkan / WebGPU)
+
 
 - **Vulkan / Direct3D 12 저수준 하드웨어 파이프라인**: 
   - 브라우저 표준 차세대 저수준 그래픽스 API인 **WebGPU** 및 **Three.js WebGPURenderer**를 기반으로 작동합니다.
@@ -81,6 +81,25 @@
 5. **보고서 출력**: 상단바 [📄 보고서] 또는 대시보드의 AI 맞춤 분석 보고서 버튼을 클릭하여 인쇄 및 PDF 저장.
 
 ---
+
+## 🛠 최근 패치 내용
+
+- **CPU 감지 로직 개선**: OS·User‑Agent 기반 폴백을 추가해 CPU brand와 코어 수를 정확히 표시.
+- **Chart.js 초기화 방어**: `window` 존재 여부를 확인해 Node 환경에서 오류 방지.
+- **모달 헤더·아이콘 수정**: “⚡ Vulkan / WebGPU” 배지 → “💻 실행 기기 상세 정보”로 변경, 중복 행 제거.
+- **서비스워커 캐시 버전 업데이트**: `3d-vis-cache-v15` 로 상승해 최신 파일 강제 로드.
+- **UI 표시 업데이트**: `getSystemInfo()` 결과를 이용해 CPU 정보를 `cpuBrand • cpuCores 논리 코어` 형식으로 표시.
+
+## ⚡ 차세대 GPU 그래픽스 아키텍처 (Vulkan / WebGPU)
+
+- **Vulkan / Direct3D 12 저수준 하드웨어 파이프라인**: 
+  - 브라우저 표준 차세대 저수준 그래픽스 API인 **WebGPU** 및 **Three.js WebGPURenderer**를 기반으로 작동합니다.
+  - Windows 시스템에서 **Vulkan / Direct3D 12** 백엔드와 직접 통신하여 기존 WebGL 대비 드라이버 오버헤드를 획기적으로 낮추고 CPU‑GPU 병목을 해소합니다.
+  - **WGSL (WebGPU Shading Language)** 네이티브 셰이더 파이프라인을 통해 대량의 3D 데이터 객체도 60~120 FPS로 안정적으로 렌더링합니다.
+- **실시간 GPU 하드웨어 모니터링 HUD**:
+  - 상단 바의 `⚡ Vulkan / WebGPU` 뱃지를 클릭하면 현재 구동 중인 GPU 어댑터 명칭, 제조사, 아키텍처 및 실시간 FPS / 프레임 타임 스파크라인 그래프를 바로 확인할 수 있습니다.
+- **무중단 스마트 자동 폴백 (Graceful Fallback)**:
+  - 구형 브라우저이거나 WebGPU가 비활성화된 환경에서는 자동으로 고안정성 **WebGL 2.0 세이프 모드**로 전환되어 호환성 문제를 원천 차단합니다.
 
 ## 🛠 기술 스택
 

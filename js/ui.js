@@ -180,7 +180,6 @@ export function initSystemInfo() {
     const modalPlatform = $('modal-system-platform');
     const modalCpu = $('modal-system-cpu');
     const modalMemory = $('modal-system-memory');
-    const modalDisplay = $('modal-system-display');
     const modalGpuApi = $('modal-gpu-api');
     const modalGpuDevice = $('modal-gpu-device');
     const modalGpuVendor = $('modal-gpu-vendor');
@@ -191,7 +190,6 @@ export function initSystemInfo() {
     if (modalPlatform) modalPlatform.textContent = `${info.osName} (${info.platform})`;
     if (modalCpu) modalCpu.textContent = `${info.cpuBrand} • ${info.cpuCores} 논리 코어`;
     if (modalMemory) modalMemory.textContent = info.deviceMemory;
-    if (modalDisplay) modalDisplay.textContent = `${info.screenRes} / ${info.colorDepth}`;
     if (modalGpuApi) modalGpuApi.textContent = appState.gpuEngineState.backendName;
     if (modalGpuDevice) modalGpuDevice.textContent = info.cleanGpuModel || appState.gpuEngineState.gpuName;
     if (modalGpuVendor) modalGpuVendor.textContent = info.gpuBrand || appState.gpuEngineState.vendor;
@@ -272,7 +270,6 @@ export function setupGpuModal() {
     const modalPlatform = $('modal-system-platform');
     const modalCpu = $('modal-system-cpu');
     const modalMemory = $('modal-system-memory');
-    const modalDisplay = $('modal-system-display');
     const modalGpuApi = $('modal-gpu-api');
     const modalGpuDevice = $('modal-gpu-device');
     const modalGpuVendor = $('modal-gpu-vendor');
@@ -286,7 +283,6 @@ export function setupGpuModal() {
         if (modalPlatform) modalPlatform.textContent = `${sysInfo.osName} (${sysInfo.platform})`;
         if (modalCpu) modalCpu.textContent = `${sysInfo.cpuBrand} • ${sysInfo.cpuCores} 논리 코어`;
         if (modalMemory) modalMemory.textContent = sysInfo.deviceMemory;
-        if (modalDisplay) modalDisplay.textContent = `${sysInfo.screenRes} / ${sysInfo.colorDepth}`;
         if (modalGpuApi) modalGpuApi.textContent = appState.gpuEngineState.backendName;
         if (modalGpuDevice) modalGpuDevice.textContent = sysInfo.cleanGpuModel || appState.gpuEngineState.gpuName;
         if (modalGpuVendor) modalGpuVendor.textContent = sysInfo.gpuBrand || appState.gpuEngineState.vendor;

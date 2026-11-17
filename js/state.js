@@ -97,7 +97,7 @@ export function getSystemInfo() {
             if (/ryzen|radeon graphics/.test(rLower)) {
                 cpuBrand = 'AMD (Ryzen Processor)';
             } else {
-                cpuBrand = 'AMD / Intel x86_64 Compatible';
+                cpuBrand = 'AMD (Ryzen / Athlon)';
             }
         } else if (/snapdragon|adreno|qualcomm/.test(rLower) || /qualcomm/.test(ua)) {
             cpuBrand = 'Qualcomm (Snapdragon ARM)';
@@ -105,7 +105,31 @@ export function getSystemInfo() {
             cpuBrand = 'MediaTek / ARM Cortex';
         } else if (/samsung|exynos|xclipse/.test(rLower)) {
             cpuBrand = 'Samsung (Exynos ARM)';
+        } else {
+            // (3) 외장 그래픽(NVIDIA 등) 탑재 PC 및 일반 데스크톱/노트북 환경 판별
+            const isWindows = /windows|win32|win64/.test(ua) || /win/i.test(platform);
+            const isMac = /macintosh|mac os x/i.test(ua);
+            const isLinux = /linux/i.test(ua);
+
+            if (isWindows || isLinux) {
+                // 일반 x86_64 PC 데스크톱/노트북의 95% 이상은 Intel 또는 AMD
+                if (/intel/i.test(ua)) {
+                    cpuBrand = 'Intel (Intel Core)';
+                } else if (/amd/i.test(ua)) {
+                    cpuBrand = 'AMD (Ryzen / x86_64)';
+                } else {
+                    cpuBrand = 'Intel / AMD (x86_64 프로세서)';
+                }
+            } else if (isMac) {
+                cpuBrand = 'Apple Silicon / Intel Mac';
+            } else {
+                cpuBrand = '표준 멀티코어 프로세서';
+            }
         }
+    } catch (e) {
+        cpuBrand = '표준 프로세서';
+    }
+
     // 4. 상세 기기 및 시스템 환경 스펙 감지
     let deviceMemory = '기본 지원';
     if (navigator.deviceMemory) {

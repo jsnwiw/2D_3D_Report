@@ -840,8 +840,8 @@
         <div class="modal-card">
             <div class="modal-header">
                 <div class="modal-title">
-                    <span class="modal-icon">⚡</span>
-                    <h3>차세대 GPU 렌더링 엔진 실행 기기 장치 정보</h3>
+                    <span class="modal-icon">💻</span>
+                    <h3>실행 기기 장치 상세 정보</h3>
                 </div>
                 <button id="btn-close-gpu-modal" class="modal-close-btn" title="닫기">&times;</button>
             </div>
@@ -860,20 +860,16 @@
                         <span class="info-val" id="modal-system-memory">감지 중...</span>
                     </div>
                     <div class="gpu-info-row">
-                        <span class="info-label">📺 디스플레이 해상도 & 색상 심도</span>
-                        <span class="info-val" id="modal-system-display">감지 중...</span>
-                    </div>
-                    <div class="gpu-info-row">
-                        <span class="info-label">⚡ 3D 가속 엔진 파이프라인</span>
-                        <span class="info-val highlight" id="modal-gpu-api">감지 중...</span>
-                    </div>
-                    <div class="gpu-info-row">
                         <span class="info-label">🏭 GPU 제조사 / 브랜드</span>
                         <span class="info-val" id="modal-gpu-vendor">감지 중...</span>
                     </div>
                     <div class="gpu-info-row full-col">
                         <span class="info-label">🎮 GPU 모델 (상세 그래픽 디바이스)</span>
                         <span class="info-val" id="modal-gpu-device" style="word-break: break-all; font-size: 11px; line-height: 1.4;">하드웨어 감지 중...</span>
+                    </div>
+                    <div class="gpu-info-row">
+                        <span class="info-label">⚡ 3D 가속 엔진 파이프라인</span>
+                        <span class="info-val highlight" id="modal-gpu-api">감지 중...</span>
                     </div>
                     <div class="gpu-info-row">
                         <span class="info-label">GPU 최대 텍스처 버퍼 크기</span>
@@ -907,11 +903,6 @@
                             <canvas id="fps-sparkline-canvas" width="420" height="48"></canvas>
                         </div>
                     </div>
-                </div>
-                <!-- WebGPU & Vulkan 저수준 아키텍처 설명 박스 -->
-                <div class="gpu-tech-note">
-                    <div class="note-title">💡 Vulkan & WebGPU 차세대 가속 원리</div>
-                    <p>현재 웹사이트는 최신 <strong>WebGPU</strong> 표준을 통해 Windows의 <strong>Vulkan / Direct3D 12</strong> 저수준 GPU 파이프라인과 직접 통신합니다. 기존 WebGL 대비 드라이버 오버헤드를 대폭 줄이고, 수만 개의 3D 데이터 오브젝트도 지연 없이 60fps 이상으로 부드럽게 렌더링합니다.</p>
                 </div>
             </div>
         </div>
