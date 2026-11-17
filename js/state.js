@@ -7,12 +7,17 @@
 // DOM 셀렉터 헬퍼
 export const $ = id => document.getElementById(id);
 
-// 시스템 정보 수집 (CPU 모델, GPU 렌더러, 벤더 등)
+// 시스템 정보 수집 (CPU 모델/제조사, GPU 렌더러, 벤더 등)
 export function getSystemInfo() {
     const platform = navigator.platform || 'Win32';
     const cpuCores = navigator.hardwareConcurrency || 4;
-    let gpuRenderer = '감지 중...';
-    let gpuVendor = '감지 중...';
+    let rawGpuRenderer = '감지 중...';
+    let rawGpuVendor = '감지 중...';
+    let cpuBrand = '감지 중...';
+    let gpuBrand = '감지 중...';
+    let cleanGpuModel = '감지 중...';
+
+    // 1. WebGL 렌더러 정보를 통해 GPU 및 보조 CPU 정보 추출
     try {
         const canvas = document.createElement('canvas');
         const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
@@ -21,14 +26,139 @@ export function getSystemInfo() {
             if (debugInfo) {
                 const rendererParam = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL);
                 const vendorParam = gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL);
-                if (rendererParam) gpuRenderer = rendererParam;
-                if (vendorParam) gpuVendor = vendorParam;
+                if (rendererParam) rawGpuRenderer = rendererParam;
+                if (vendorParam) rawGpuVendor = vendorParam;
             }
         }
     } catch (e) {
         // ignore
     }
-    return { platform, cpuCores, gpuRenderer, gpuVendor };
+
+    const rLower = rawGpuRenderer.toLowerCase();
+    const vLower = rawGpuVendor.toLowerCase();
+
+    // 2. GPU 브랜드/제조사 및 정제된 모델명 판별
+    try {
+        if (/nvidia|geforce|quadro|rtx|gtx|titan/.test(rLower) || /nvidia/.test(vLower)) {
+            gpuBrand = 'NVIDIA';
+            if (/rtx\s*\d{3,4}/i.test(rawGpuRenderer)) {
+                gpuBrand = 'NVIDIA (GeForce RTX)';
+            } else if (/gtx\s*\d{3,4}/i.test(rawGpuRenderer)) {
+                gpuBrand = 'NVIDIA (GeForce GTX)';
+            }
+        } else if (/amd|radeon|rx\s*\d{3,4}|vega/.test(rLower) || /amd|ati/.test(vLower)) {
+            gpuBrand = 'AMD (Radeon Graphics)';
+        } else if (/intel|iris|uhd graphics|hd graphics|arc/.test(rLower) || /intel/.test(vLower)) {
+            if (/arc/i.test(rawGpuRenderer)) {
+                gpuBrand = 'Intel (Intel Arc 외장 그래픽)';
+            } else {
+                gpuBrand = 'Intel (Intel Iris / UHD 내장 그래픽)';
+            }
+        } else if (/apple|m1|m2|m3|m4/.test(rLower) || /apple/.test(vLower)) {
+            gpuBrand = 'Apple (Apple Silicon GPU)';
+        } else if (/adreno|qualcomm/.test(rLower) || /qualcomm/.test(vLower)) {
+            gpuBrand = 'Qualcomm (Adreno GPU)';
+        } else if (/mali|arm/.test(rLower) || /arm/.test(vLower)) {
+            gpuBrand = 'ARM (Mali GPU)';
+        } else if (/powervr|imagination/.test(rLower)) {
+            gpuBrand = 'Imagination (PowerVR GPU)';
+        } else if (/xclipse|samsung/.test(rLower)) {
+            gpuBrand = 'Samsung (Xclipse AMD RDNA GPU)';
+        } else if (rawGpuVendor && rawGpuVendor !== '감지 중...') {
+            gpuBrand = rawGpuVendor;
+        } else {
+            gpuBrand = 'Standard GPU Device';
+        }
+
+        // 보기 편한 정제된 GPU 명칭 추출 (ANGLE D3D11 등의 래퍼 접두어 정리)
+        cleanGpuModel = rawGpuRenderer
+            .replace(/^ANGLE\s*\([^,]+,\s*/i, '')
+            .replace(/\s*Direct3D[^\)]*\)/i, '')
+            .replace(/\s*vs_[^\)]*\)/i, '')
+            .trim();
+        if (!cleanGpuModel) cleanGpuModel = rawGpuRenderer;
+    } catch (e) {
+        gpuBrand = 'Generic GPU';
+        cleanGpuModel = rawGpuRenderer;
+    }
+
+    // 3. CPU 브랜드/제조사 추론 및 판별
+    try {
+        const ua = (navigator.userAgent || '').toLowerCase();
+
+        // (1) Apple Silicon 감지
+        if (/macintosh|mac os x/.test(ua) && (navigator.maxTouchPoints > 0 || /apple/.test(vLower) || /apple/.test(rLower))) {
+            cpuBrand = 'Apple (Apple Silicon)';
+        }
+        // (2) 내장 그래픽/렌더러 기반 CPU 칩셋 식별
+        else if (/intel/.test(rLower) || /intel/.test(vLower)) {
+            cpuBrand = 'Intel (Intel Core / Xeon)';
+        } else if (/amd|radeon/.test(rLower) || /amd|ati/.test(vLower)) {
+            if (/ryzen|radeon graphics/.test(rLower)) {
+                cpuBrand = 'AMD (Ryzen Processor)';
+            } else {
+                cpuBrand = 'AMD / Intel x86_64 Compatible';
+            }
+        } else if (/snapdragon|adreno|qualcomm/.test(rLower) || /qualcomm/.test(ua)) {
+            cpuBrand = 'Qualcomm (Snapdragon ARM)';
+        } else if (/mediatek|mali/.test(rLower) || /mediatek/.test(ua)) {
+            cpuBrand = 'MediaTek / ARM Cortex';
+        } else if (/samsung|exynos|xclipse/.test(rLower)) {
+            cpuBrand = 'Samsung (Exynos ARM)';
+        }
+    // 4. 상세 기기 및 시스템 환경 스펙 감지
+    let deviceMemory = '기본 지원';
+    if (navigator.deviceMemory) {
+        deviceMemory = `약 ${navigator.deviceMemory}GB RAM`;
+    }
+
+    const screenRes = `${window.screen.width} × ${window.screen.height} (DPR: ${window.devicePixelRatio || 1})`;
+    const colorDepth = `${window.screen.colorDepth || 24}비트 트루컬러`;
+
+    let maxTextureSize = '감지 중...';
+    let maxViewportDims = '감지 중...';
+    try {
+        const c = document.createElement('canvas');
+        const g = c.getContext('webgl');
+        if (g) {
+            maxTextureSize = `${g.getParameter(g.MAX_TEXTURE_SIZE)}px`;
+            const vp = g.getParameter(g.MAX_VIEWPORT_DIMS);
+            if (vp) maxViewportDims = `${vp[0]} × ${vp[1]}`;
+        }
+    } catch(e) {}
+
+    let networkType = '안정적 초고속 연결';
+    if (navigator.connection) {
+        const conn = navigator.connection;
+        networkType = `${conn.effectiveType ? conn.effectiveType.toUpperCase() : ''} (${conn.downlink ? conn.downlink + 'Mbps' : '온라인'})`.trim();
+    }
+
+    let osName = 'Windows';
+    const ua = (navigator.userAgent || '').toLowerCase();
+    if (/windows nt 10\.0/.test(ua)) osName = 'Windows 10 / Windows 11';
+    else if (/windows nt 6\.3/.test(ua)) osName = 'Windows 8.1';
+    else if (/windows nt 6\.1/.test(ua)) osName = 'Windows 7';
+    else if (/macintosh|mac os x/.test(ua)) osName = 'macOS';
+    else if (/android/.test(ua)) osName = 'Android OS';
+    else if (/iphone|ipad|ipod/.test(ua)) osName = 'iOS';
+    else if (/linux/.test(ua)) osName = 'Linux';
+
+    return { 
+        platform, 
+        osName,
+        cpuCores, 
+        cpuBrand, 
+        gpuRenderer: rawGpuRenderer, 
+        cleanGpuModel, 
+        gpuVendor: rawGpuVendor, 
+        gpuBrand,
+        deviceMemory,
+        screenRes,
+        colorDepth,
+        maxTextureSize,
+        maxViewportDims,
+        networkType
+    };
 }
 
 // 전역 공유 상태 컨테이너

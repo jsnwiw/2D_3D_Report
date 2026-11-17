@@ -10,13 +10,18 @@
  */
 
 // 캐시 스토리지 고유 버전명 (리소스 업데이트 시 버전 변경)
-const CACHE_NAME = '3d-vis-cache-v12';
+const CACHE_NAME = '3d-vis-cache-v13';
 
 // 오프라인 상태에서도 동작할 수 있도록 사전 캐싱할 핵심 정적 자산 목록
 const ASSETS_TO_CACHE = [
   './',                  // 루트 경로
   './index.html',        // 메인 HTML 마크업
-  './style.css',         // 대시보드 및 3D UI 스타일시트
+  './style.css',         // 대시보드 및 3D UI 스타일시트 (마스터 번들)
+  './css/variables.css', // 디자인 시스템 & 테마 CSS 변수
+  './css/components.css',// 상단바, 패널, 폼 컨트롤 컴포넌트
+  './css/modals.css',    // GPU 사양, 사용법 안내 모달
+  './css/report.css',    // A4 인쇄 및 AI 분석 보고서 스튜디오
+  './css/responsive.css',// 모바일 및 반응형 레이아웃
   './main.js',           // Three.js 엔진, 데이터 분석, UI 상호작용 메인 스크립트
   './js/state.js',       // 전역 상태 및 공유 유틸리티
   './js/parser.js',      // CSV 및 엑셀 파서

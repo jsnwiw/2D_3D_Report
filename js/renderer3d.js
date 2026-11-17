@@ -6,7 +6,7 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import WebGPURenderer from 'three/addons/renderers/webgpu/WebGPURenderer.js';
-import { $, appState, showToast } from './state.js';
+import { $, appState, showToast, getSystemInfo } from './state.js';
 import { inferBest3DStyle } from './analytics.js';
 import { showDetailCard } from './chart2d.js';
 
@@ -103,11 +103,12 @@ export async function initThreeScene() {
     const _mv = $('modal-gpu-vendor');
     const _mar = $('modal-gpu-architecture');
     const _mf = $('modal-gpu-features');
+    const _sys = getSystemInfo ? getSystemInfo() : null;
     if (_mp) _mp.textContent = navigator.platform || 'Unknown';
-    if (_mc) _mc.textContent = `${navigator.hardwareConcurrency || '?'}코어`;
+    if (_mc) _mc.textContent = _sys ? `${_sys.cpuCores}코어 (${_sys.cpuBrand})` : `${navigator.hardwareConcurrency || '?'}코어`;
     if (_ma) _ma.textContent = appState.gpuEngineState.backendName;
-    if (_md) _md.textContent = appState.gpuEngineState.gpuName;
-    if (_mv) _mv.textContent = appState.gpuEngineState.vendor;
+    if (_md) _md.textContent = _sys?.cleanGpuModel || appState.gpuEngineState.gpuName;
+    if (_mv) _mv.textContent = _sys?.gpuBrand || appState.gpuEngineState.vendor;
     if (_mar) _mar.textContent = appState.gpuEngineState.architecture;
     if (_mf) _mf.textContent = appState.gpuEngineState.featuresCount > 0
         ? `${appState.gpuEngineState.featuresCount}개 하드웨어 기능 활성화됨`
