@@ -189,7 +189,11 @@ export function initSystemInfo() {
 
     if (modalPlatform) modalPlatform.textContent = `${info.osName} (${info.platform})`;
     if (modalCpu) modalCpu.textContent = `${info.cpuBrand} • ${info.cpuCores} 논리 코어`;
-    if (modalMemory) modalMemory.textContent = info.deviceMemory;
+    // If device is Samsung Galaxy, indicate RAM Plus support
+    if (/samsung|galaxy/.test(navigator.userAgent.toLowerCase())) {
+        const ramPlusInfo = 'RAM Plus 사용 가능';
+        modalMemory.textContent = `${modalMemory.textContent} • ${ramPlusInfo}`;
+    }
     if (modalGpuApi) modalGpuApi.textContent = appState.gpuEngineState.backendName;
     if (modalGpuDevice) modalGpuDevice.textContent = info.cleanGpuModel || appState.gpuEngineState.gpuName;
     if (modalGpuVendor) modalGpuVendor.textContent = info.gpuBrand || appState.gpuEngineState.vendor;
