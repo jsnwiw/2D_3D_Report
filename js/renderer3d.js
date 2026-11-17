@@ -35,9 +35,12 @@ export async function initThreeScene() {
     const container = $('canvas-container');
     if (!container) return;
 
+    const isDark = document.body.classList.contains('dark-mode');
+    const initialBg = isDark ? 0x0f172a : 0xf1f5f9;
+
     appState.scene = new THREE.Scene();
-    appState.scene.background = new THREE.Color(0xf1f5f9);
-    appState.scene.fog = new THREE.FogExp2(0xf1f5f9, 0.015);
+    appState.scene.background = new THREE.Color(initialBg);
+    appState.scene.fog = new THREE.FogExp2(initialBg, 0.015);
 
     appState.camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 500);
     appState.camera.position.set(0, 10, 20);
@@ -170,7 +173,10 @@ export async function initThreeScene() {
     appState.scene.add(pointLight);
 
     // 그리드
-    appState.gridHelper = new THREE.GridHelper(30, 30, 0x94a3b8, 0xe2e8f0);
+    const isDarkGrid = document.body.classList.contains('dark-mode');
+    const gridColor1 = isDarkGrid ? 0x6366f1 : 0x94a3b8;
+    const gridColor2 = isDarkGrid ? 0x334155 : 0xe2e8f0;
+    appState.gridHelper = new THREE.GridHelper(30, 30, gridColor1, gridColor2);
     appState.gridHelper.position.y = 0;
     appState.scene.add(appState.gridHelper);
 
@@ -688,6 +694,31 @@ export function toggleLabels() {
 export function toggleGrid() {
     if (appState.gridHelper) {
         appState.gridHelper.visible = !appState.gridHelper.visible;
+        appState.gridHelperHidden = !appState.gridHelper.visible;
+    }
+}
+
+/**
+ * 3D 씬 테마(라이트 / 다크) 실시간 동기화
+ */
+export function update3DTheme(isDark) {
+    if (!appState.scene) return;
+    const bgColor = isDark ? 0x0f172a : 0xf1f5f9;
+    appState.scene.background = new THREE.Color(bgColor);
+    if (appState.scene.fog) {
+        appState.scene.fog.color.set(bgColor);
+    }
+    if (appState.gridHelper) {
+        const wasVisible = appState.gridHelper.visible;
+        appState.scene.remove(appState.gridHelper);
+        if (appState.gridHelper.geometry) appState.gridHelper.geometry.dispose();
+        if (appState.gridHelper.material) appState.gridHelper.material.dispose();
+        const gridColor1 = isDark ? 0x6366f1 : 0x94a3b8;
+        const gridColor2 = isDark ? 0x334155 : 0xe2e8f0;
+        appState.gridHelper = new THREE.GridHelper(30, 30, gridColor1, gridColor2);
+        appState.gridHelper.position.y = 0;
+        appState.gridHelper.visible = wasVisible;
+        appState.scene.add(appState.gridHelper);
     }
 }
 
@@ -904,8 +935,9 @@ export function bindCameraControls() {
         appState.controls.autoRotateSpeed = 2.0;
         const btn = $('btn-auto-rotate');
         if (btn) {
-            btn.style.background = appState.controls.autoRotate ? '#e0e7ff' : '';
-            btn.style.color = appState.controls.autoRotate ? '#4338ca' : '';
+            btn.classList.toggle('active', appState.controls.autoRotate);
+            btn.style.background = '';
+            btn.style.color = '';
         }
     });
     $('btn-toggle-grid')?.addEventListener('click', toggleGrid);

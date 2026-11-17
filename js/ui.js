@@ -6,6 +6,7 @@
 import * as THREE from 'three';
 import { $, appState, showToast, getSystemInfo } from './state.js';
 import { loadAndParseFile } from './parser.js';
+import { update3DTheme } from './renderer3d.js';
 
 let totalRenderFrames = 0;
 
@@ -413,6 +414,8 @@ export function setupTopBarActions() {
         if (menuPanel) menuPanel.classList.remove('open');
     });
 
+    setupThemeToggle();
+
     btnFullscreen?.addEventListener('click', () => {
         if (!document.fullscreenElement) {
             document.documentElement.requestFullscreen?.();
@@ -476,9 +479,7 @@ export function setupTopBarActions() {
     };
 
     const topBarRight = document.querySelector('.top-bar-right');
-    const topBar = $('top-bar');
     if (topBarRight) makeSmoothHorizontalScroll(topBarRight);
-    if (topBar) makeSmoothHorizontalScroll(topBar);
 }
 
 /**
@@ -610,5 +611,43 @@ export function setupLightingControls() {
         if (valExposure) valExposure.textContent = '1.1';
 
         showToast('💡 조명 및 환경설정이 기본값(흰색 포인트 조명)으로 초기화되었습니다.');
+    });
+}
+
+/**
+ * 다크모드 / 라이트모드 전환 토글 시스템
+ */
+export function setupThemeToggle() {
+    const btn = $('btn-toggle-theme');
+    const icon = $('theme-toggle-icon');
+    const text = $('theme-toggle-text');
+    const mobileIcon = $('mobile-theme-icon');
+
+    // 이전 저장 테마 또는 시스템 선호 감지 (기본은 라이트)
+    const savedTheme = localStorage.getItem('app-theme') || 'light';
+    const isDark = savedTheme === 'dark';
+
+    const applyTheme = (dark, showNotify = false) => {
+        document.body.classList.toggle('dark-mode', dark);
+        document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+        if (icon) icon.textContent = dark ? '☀️' : '🌙';
+        if (text) text.textContent = dark ? '라이트' : '다크';
+        if (mobileIcon) mobileIcon.textContent = dark ? '☀️' : '🌙';
+        if (btn) {
+            btn.title = dark ? '라이트 모드로 전환' : '다크 모드로 전환';
+            btn.classList.toggle('active', dark);
+        }
+        localStorage.setItem('app-theme', dark ? 'dark' : 'light');
+        update3DTheme(dark);
+        if (showNotify) {
+            showToast(dark ? '🌙 <strong>다크 모드</strong>로 전환되었습니다.' : '☀️ <strong>라이트 모드</strong>로 전환되었습니다.');
+        }
+    };
+
+    applyTheme(isDark, false);
+
+    btn?.addEventListener('click', () => {
+        const currentlyDark = document.body.classList.contains('dark-mode');
+        applyTheme(!currentlyDark, true);
     });
 }
