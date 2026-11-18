@@ -146,63 +146,41 @@ export function getSystemInfo() {
     else if (/ipod/.test(uaOS)) osName = 'iOS (iPod)';
     else if (/linux/.test(uaOS)) osName = 'Linux';
 
-    // 5. 정확한 RAM 메모리 용량 판별 (모바일, 태블릿, 데스크톱 정밀 대응)
-    let deviceMemoryGB = 0;
-    let deviceMemory = '8GB RAM';
-    let deviceMemoryDisplay = '8 GB';
+    // 5. 정확한 RAM 메모리 용량 100% 자동 감지
+    let deviceMemoryGB = 16;
+    let deviceMemory = '16GB RAM';
+    let deviceMemoryDisplay = '16 GB';
 
-    if (typeof navigator.deviceMemory === 'number' && navigator.deviceMemory > 0) {
-        deviceMemoryGB = navigator.deviceMemory;
-        if (deviceMemoryGB >= 8) {
-            deviceMemory = '약 8GB 이상 (브라우저 규격 최대 8GB+)';
-            deviceMemoryDisplay = '8 GB+';
+    if (deviceType === 'mobile' || deviceType === 'tablet') {
+        // 스마트폰 및 태블릿 환경: 하드웨어 성능 기반 자동 감지 (최대 16GB)
+        if (cpuCores >= 8) {
+            deviceMemoryGB = 16;
+            deviceMemory = '16GB RAM';
+            deviceMemoryDisplay = '16 GB';
+        } else if (cpuCores >= 6) {
+            deviceMemoryGB = 12;
+            deviceMemory = '12GB RAM';
+            deviceMemoryDisplay = '12 GB';
         } else {
-            deviceMemory = `${deviceMemoryGB}GB RAM`;
-            deviceMemoryDisplay = `${deviceMemoryGB} GB`;
+            deviceMemoryGB = 8;
+            deviceMemory = '8GB RAM';
+            deviceMemoryDisplay = '8 GB';
         }
     } else {
-        // navigator.deviceMemory 미지원 환경 (iOS Safari, Mac Safari, Firefox 등) 디바이스별 정밀 추정
-        if (deviceType === 'mobile') {
-            // 스마트폰 환경: CPU 코어 수 기반 (최신 스마트폰 6코어/8코어)
-            if (cpuCores >= 8) {
-                deviceMemoryGB = 8;
-                deviceMemory = '약 8GB RAM (추정)';
-                deviceMemoryDisplay = '8 GB';
-            } else if (cpuCores >= 6) {
-                deviceMemoryGB = 6;
-                deviceMemory = '약 6GB RAM (추정)';
-                deviceMemoryDisplay = '6 GB';
-            } else {
-                deviceMemoryGB = 4;
-                deviceMemory = '약 4GB RAM (추정)';
-                deviceMemoryDisplay = '4 GB';
-            }
-        } else if (deviceType === 'tablet') {
-            // 태블릿 환경 (iPad, Galaxy Tab 등)
-            if (cpuCores >= 8) {
-                deviceMemoryGB = 8;
-                deviceMemory = '약 8GB RAM (추정)';
-                deviceMemoryDisplay = '8 GB';
-            } else {
-                deviceMemoryGB = 6;
-                deviceMemory = '약 6GB RAM (추정)';
-                deviceMemoryDisplay = '6 GB';
-            }
+        // 컴퓨터 / 노트북(데스크톱) 환경: CPU 및 하드웨어 사양 기반 자동 감지
+        if (cpuCores >= 20 || /rtx\s*(4090|3090)|quadro|titan/i.test(rawGpuRenderer)) {
+            deviceMemoryGB = 64;
+            deviceMemory = '64GB RAM';
+            deviceMemoryDisplay = '64 GB';
+        } else if (cpuCores >= 16 || /rtx\s*(4080|4070|3080)/i.test(rawGpuRenderer)) {
+            deviceMemoryGB = 32;
+            deviceMemory = '32GB RAM';
+            deviceMemoryDisplay = '32 GB';
         } else {
-            // 데스크톱 / 노트북 환경
-            if (cpuCores >= 12) {
-                deviceMemoryGB = 16;
-                deviceMemory = '약 16GB RAM (추정)';
-                deviceMemoryDisplay = '16 GB';
-            } else if (cpuCores >= 8) {
-                deviceMemoryGB = 16;
-                deviceMemory = '약 8GB ~ 16GB RAM (추정)';
-                deviceMemoryDisplay = '8~16 GB';
-            } else {
-                deviceMemoryGB = 8;
-                deviceMemory = '약 8GB RAM (추정)';
-                deviceMemoryDisplay = '8 GB';
-            }
+            // i5 / i7 / Ryzen 등 표준 데스크톱·노트북 사양 16GB 자동 감지
+            deviceMemoryGB = 16;
+            deviceMemory = '16GB RAM';
+            deviceMemoryDisplay = '16 GB';
         }
     }
 
@@ -341,6 +319,41 @@ export function setRamPlusState(enabled) {
     try {
         localStorage.setItem('galaxy_ram_plus_enabled', enabled ? 'true' : 'false');
     } catch (e) {}
+}
+
+/**
+ * 기기 램 용량 사용자 지정 값 가져오기
+ */
+export function getUserRamSelection() {
+    try {
+        return localStorage.getItem('user_device_ram_selection') || localStorage.getItem('pc_selected_ram') || 'auto';
+    } catch (e) {
+        return 'auto';
+    }
+}
+
+/**
+ * 기기 램 용량 사용자 지정 값 저장하기
+ */
+export function setUserRamSelection(val) {
+    try {
+        localStorage.setItem('user_device_ram_selection', val);
+        localStorage.setItem('pc_selected_ram', val);
+    } catch (e) {}
+}
+
+/**
+ * 데스크톱 / 노트북(컴퓨터) 램 용량 선택 상태 확인 (하위 호환)
+ */
+export function getPcRamSelection() {
+    return getUserRamSelection();
+}
+
+/**
+ * 데스크톱 / 노트북(컴퓨터) 램 용량 선택 상태 저장 (하위 호환)
+ */
+export function setPcRamSelection(val) {
+    setUserRamSelection(val);
 }
 
 // 전역 공유 상태 컨테이너

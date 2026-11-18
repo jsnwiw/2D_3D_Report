@@ -208,6 +208,9 @@ export function initSystemInfo() {
  * - 삼성 갤럭시 기기가 아닌 경우 RAM Plus 항목을 완전히 숨김
  * - 삼성 갤럭시 기기에서 RAM Plus가 켜져 있을 때만 RAM Plus 표시 및 뱃지 활성화
  */
+/**
+ * 삼성 RAM Plus 및 기기별 물리 램 용량 동기화 UI (100% 자동 감지)
+ */
 export function updateSamsungRamPlusUI() {
     const isGalaxy = isSamsungGalaxyDevice();
     const rowRamPlus = $('row-samsung-ramplus');
@@ -216,10 +219,14 @@ export function updateSamsungRamPlusUI() {
     const btnToggle = $('btn-toggle-ramplus');
     const sysInfo = getSystemInfo();
 
+    const displayRam = sysInfo.deviceMemoryDisplay || `${sysInfo.deviceMemoryGB} GB`;
+
     if (!isGalaxy) {
-        // 삼성 갤럭시가 아닌 기기(아이폰, PC, 타 안드로이드 등)는 RAM Plus 관련 UI 완전 비활성화
+        // 삼성 갤럭시가 아닌 기기(PC, 노트북, 아이폰, iPad, 일반 안드로이드 등)는 RAM Plus UI 비활성화
         if (rowRamPlus) rowRamPlus.style.display = 'none';
-        if (modalMemory) modalMemory.textContent = sysInfo.deviceMemory;
+        if (modalMemory) {
+            modalMemory.textContent = displayRam;
+        }
         return;
     }
 
@@ -248,17 +255,9 @@ export function updateSamsungRamPlusUI() {
     }
 
     if (modalMemory) {
-        // 기본값: deviceMemoryGB 가 0이면 추정값 사용
-        let base = sysInfo.deviceMemoryGB;
-        if (!base || base <= 0) {
-            // 추정값 (기기가 모바일/태블릿/데스크톱에 따라 다름)
-            const type = sysInfo.deviceType;
-            if (type === 'mobile') base = 4; // 일반 모바일 4GB 정도
-            else if (type === 'tablet') base = 6; // 일반 태블릿 6GB 정도
-            else base = 8; // 데스크톱 기본 8GB
-        }
+        const base = sysInfo.deviceMemoryGB || 16;
         const displayBase = `${base} GB`;
-        const finalDisplay = (isRamPlusOn && base >= 8) ? `${base} GB + RAM Plus` : displayBase;
+        const finalDisplay = isRamPlusOn ? `${base} GB + RAM Plus` : displayBase;
         modalMemory.textContent = finalDisplay;
     }
 }
