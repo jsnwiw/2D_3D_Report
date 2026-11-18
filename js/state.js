@@ -132,6 +132,8 @@ export function getSystemInfo() {
 
     // 4. 상세 기기 및 시스템 환경 스펙 감지
     let deviceMemory = '기본 지원';
+    // 숫자형 메모리 용량 (GB) 제공 – navigator.deviceMemory 가 없을 경우 0 반환
+    const deviceMemoryGB = navigator.deviceMemory ? navigator.deviceMemory : 0;
     if (navigator.deviceMemory) {
         if (navigator.deviceMemory >= 8) {
             deviceMemory = '약 8GB 이상 (브라우저 규격 최대 8GB+)';
@@ -186,7 +188,8 @@ export function getSystemInfo() {
         maxTextureSize,
         maxViewportDims,
         networkType,
-        isSamsungGalaxy: isSamsungGalaxyDevice()
+        isSamsungGalaxy: isSamsungGalaxyDevice(),
+        deviceMemoryGB
     };
 }
 

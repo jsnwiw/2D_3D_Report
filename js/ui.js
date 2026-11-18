@@ -248,7 +248,8 @@ export function updateSamsungRamPlusUI() {
     }
 
     if (modalMemory) {
-        const base = parseFloat(sysInfo.deviceMemory);
+        const base = sysInfo.deviceMemoryGB !== undefined ? sysInfo.deviceMemoryGB : parseFloat(sysInfo.deviceMemory);
+        // fallback: if parsing fails, treat as 0
         let display = `${base} GB`;
         // If RAM Plus is on and physical memory is 8 GB or more, show combined value.
         if (isRamPlusOn && base >= 8) {
