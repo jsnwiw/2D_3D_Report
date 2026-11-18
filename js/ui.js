@@ -248,8 +248,14 @@ export function updateSamsungRamPlusUI() {
     }
 
     if (modalMemory) {
-        const base = sysInfo.deviceMemory;
-        const display = isRamPlusOn ? `${base} + RAM Plus` : base;
+        const base = parseFloat(sysInfo.deviceMemory);
+        let display = `${base} GB`;
+        // If RAM Plus is on and physical memory is 8 GB or more, show combined value.
+        if (isRamPlusOn && base >= 8) {
+            display = `${base} GB + RAM Plus`;
+        }
+        // If RAM Plus is on but physical memory is less than 8 GB, keep separate display (physical only).
+        // The RAM Plus status is shown via statusEl/button.
         modalMemory.textContent = display;
     }
 }
