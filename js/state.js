@@ -8,9 +8,12 @@
 export const $ = id => document.getElementById(id);
 
 // 시스템 정보 수집 (CPU 모델/제조사, GPU 렌더러, 벤더 등)
+import { getDeviceType } from './device.js';
+
 export function getSystemInfo() {
     const platform = navigator.platform || 'Win32';
     const cpuCores = navigator.hardwareConcurrency || 4;
+    const deviceType = getDeviceType();
     let rawGpuRenderer = '감지 중...';
     let rawGpuVendor = '감지 중...';
     let cpuBrand = '감지 중...';
@@ -131,14 +134,75 @@ export function getSystemInfo() {
     }
 
     // 4. 상세 기기 및 시스템 환경 스펙 감지
-    let deviceMemory = '기본 지원';
-    // 숫자형 메모리 용량 (GB) 제공 – navigator.deviceMemory 가 없을 경우 0 반환
-    const deviceMemoryGB = navigator.deviceMemory ? navigator.deviceMemory : 0;
-    if (navigator.deviceMemory) {
-        if (navigator.deviceMemory >= 8) {
+    let osName = 'Windows';
+    const uaOS = (navigator.userAgent || '').toLowerCase();
+    if (/windows nt 10\.0/.test(uaOS)) osName = 'Windows 10 / Windows 11';
+    else if (/windows nt 6\.3/.test(uaOS)) osName = 'Windows 8.1';
+    else if (/windows nt 6\.1/.test(uaOS)) osName = 'Windows 7';
+    else if (/macintosh|mac os x/.test(uaOS)) osName = 'macOS';
+    else if (/android/.test(uaOS)) osName = 'Android OS';
+    else if (/iphone/.test(uaOS)) osName = 'iOS (iPhone)';
+    else if (/ipad/.test(uaOS)) osName = 'iPadOS (iPad)';
+    else if (/ipod/.test(uaOS)) osName = 'iOS (iPod)';
+    else if (/linux/.test(uaOS)) osName = 'Linux';
+
+    // 5. 정확한 RAM 메모리 용량 판별 (모바일, 태블릿, 데스크톱 정밀 대응)
+    let deviceMemoryGB = 0;
+    let deviceMemory = '8GB RAM';
+    let deviceMemoryDisplay = '8 GB';
+
+    if (typeof navigator.deviceMemory === 'number' && navigator.deviceMemory > 0) {
+        deviceMemoryGB = navigator.deviceMemory;
+        if (deviceMemoryGB >= 8) {
             deviceMemory = '약 8GB 이상 (브라우저 규격 최대 8GB+)';
+            deviceMemoryDisplay = '8 GB+';
         } else {
-            deviceMemory = `약 ${navigator.deviceMemory}GB RAM`;
+            deviceMemory = `${deviceMemoryGB}GB RAM`;
+            deviceMemoryDisplay = `${deviceMemoryGB} GB`;
+        }
+    } else {
+        // navigator.deviceMemory 미지원 환경 (iOS Safari, Mac Safari, Firefox 등) 디바이스별 정밀 추정
+        if (deviceType === 'mobile') {
+            // 스마트폰 환경: CPU 코어 수 기반 (최신 스마트폰 6코어/8코어)
+            if (cpuCores >= 8) {
+                deviceMemoryGB = 8;
+                deviceMemory = '약 8GB RAM (추정)';
+                deviceMemoryDisplay = '8 GB';
+            } else if (cpuCores >= 6) {
+                deviceMemoryGB = 6;
+                deviceMemory = '약 6GB RAM (추정)';
+                deviceMemoryDisplay = '6 GB';
+            } else {
+                deviceMemoryGB = 4;
+                deviceMemory = '약 4GB RAM (추정)';
+                deviceMemoryDisplay = '4 GB';
+            }
+        } else if (deviceType === 'tablet') {
+            // 태블릿 환경 (iPad, Galaxy Tab 등)
+            if (cpuCores >= 8) {
+                deviceMemoryGB = 8;
+                deviceMemory = '약 8GB RAM (추정)';
+                deviceMemoryDisplay = '8 GB';
+            } else {
+                deviceMemoryGB = 6;
+                deviceMemory = '약 6GB RAM (추정)';
+                deviceMemoryDisplay = '6 GB';
+            }
+        } else {
+            // 데스크톱 / 노트북 환경
+            if (cpuCores >= 12) {
+                deviceMemoryGB = 16;
+                deviceMemory = '약 16GB RAM (추정)';
+                deviceMemoryDisplay = '16 GB';
+            } else if (cpuCores >= 8) {
+                deviceMemoryGB = 16;
+                deviceMemory = '약 8GB ~ 16GB RAM (추정)';
+                deviceMemoryDisplay = '8~16 GB';
+            } else {
+                deviceMemoryGB = 8;
+                deviceMemory = '약 8GB RAM (추정)';
+                deviceMemoryDisplay = '8 GB';
+            }
         }
     }
 
@@ -163,35 +227,28 @@ export function getSystemInfo() {
         networkType = `${conn.effectiveType ? conn.effectiveType.toUpperCase() : ''} (${conn.downlink ? conn.downlink + 'Mbps' : '온라인'})`.trim();
     }
 
-    let osName = 'Windows';
-    const ua = (navigator.userAgent || '').toLowerCase();
-    if (/windows nt 10\.0/.test(ua)) osName = 'Windows 10 / Windows 11';
-    else if (/windows nt 6\.3/.test(ua)) osName = 'Windows 8.1';
-    else if (/windows nt 6\.1/.test(ua)) osName = 'Windows 7';
-    else if (/macintosh|mac os x/.test(ua)) osName = 'macOS';
-    else if (/android/.test(ua)) osName = 'Android OS';
-    else if (/iphone|ipad|ipod/.test(ua)) osName = 'iOS';
-    else if (/linux/.test(ua)) osName = 'Linux';
-
-    return { 
-        platform, 
+    return {
+        platform,
         osName,
-        cpuCores, 
-        cpuBrand, 
-        gpuRenderer: rawGpuRenderer, 
-        cleanGpuModel, 
-        gpuVendor: rawGpuVendor, 
+        cpuCores,
+        cpuBrand,
+        gpuRenderer: rawGpuRenderer,
+        cleanGpuModel,
+        gpuVendor: rawGpuVendor,
         gpuBrand,
         deviceMemory,
+        deviceMemoryGB,
+        deviceMemoryDisplay,
+        deviceType,
         screenRes,
         colorDepth,
         maxTextureSize,
         maxViewportDims,
         networkType,
-        isSamsungGalaxy: isSamsungGalaxyDevice(),
-        deviceMemoryGB
+        isSamsungGalaxy: isSamsungGalaxyDevice()
     };
 }
+
 
 let _cachedIsSamsung = null;
 

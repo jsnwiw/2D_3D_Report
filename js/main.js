@@ -22,6 +22,7 @@ import { initThreeScene, render3DVisualization, bindCameraControls } from './ren
 import { render2DChart, bindChartPanelControls, getFilteredRows } from './chart2d.js';
 import { initTimePlayer, bindTimelineEvents, updateTimePlayerUI } from './timeline.js';
 import { openAiReportStudio, bindAiReportEvents, updateReportRecommendationUI } from './ai-report.js';
+import { initPWA } from './pwa.js';
 import {
     setupAccordionUI,
     setupMenuScroll,
@@ -364,7 +365,7 @@ function bindFilterAndOptionEvents() {
  * 🚀 애플리케이션 진입점 (Bootstrap)
  */
 async function bootstrapApp() {
-    setupServiceWorkerUpdates();
+    initPWA();
     const menuPanel = $('menu-panel');
     if (menuPanel && window.innerWidth > 768) menuPanel.classList.add('open');
     try {

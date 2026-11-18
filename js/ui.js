@@ -248,16 +248,18 @@ export function updateSamsungRamPlusUI() {
     }
 
     if (modalMemory) {
-        const base = sysInfo.deviceMemoryGB !== undefined ? sysInfo.deviceMemoryGB : parseFloat(sysInfo.deviceMemory);
-        // fallback: if parsing fails, treat as 0
-        let display = `${base} GB`;
-        // If RAM Plus is on and physical memory is 8 GB or more, show combined value.
-        if (isRamPlusOn && base >= 8) {
-            display = `${base} GB + RAM Plus`;
+        // 기본값: deviceMemoryGB 가 0이면 추정값 사용
+        let base = sysInfo.deviceMemoryGB;
+        if (!base || base <= 0) {
+            // 추정값 (기기가 모바일/태블릿/데스크톱에 따라 다름)
+            const type = sysInfo.deviceType;
+            if (type === 'mobile') base = 4; // 일반 모바일 4GB 정도
+            else if (type === 'tablet') base = 6; // 일반 태블릿 6GB 정도
+            else base = 8; // 데스크톱 기본 8GB
         }
-        // If RAM Plus is on but physical memory is less than 8 GB, keep separate display (physical only).
-        // The RAM Plus status is shown via statusEl/button.
-        modalMemory.textContent = display;
+        const displayBase = `${base} GB`;
+        const finalDisplay = (isRamPlusOn && base >= 8) ? `${base} GB + RAM Plus` : displayBase;
+        modalMemory.textContent = finalDisplay;
     }
 }
 

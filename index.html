@@ -12,9 +12,13 @@
          ======================================================= -->
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#0f172a">
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="3D시각화">
+    <meta name="application-name" content="3D시각화">
+    <meta name="msapplication-TileColor" content="#0f172a">
+    <meta name="msapplication-navbutton-color" content="#0f172a">
     <link rel="apple-touch-icon" href="icon-192.png">
     <link rel="icon" type="image/png" href="icon-192.png">
 
@@ -125,6 +129,7 @@
             <button id="btn-screenshot" class="tool camera" title="현재 3D 화면 고화질 PNG 이미지로 저장"><span class="toolbar-icon" aria-hidden="true">📸</span> 캡처</button>
             <button id="btn-usage-guide" class="tool" title="사용 방법 안내"><span class="toolbar-icon" aria-hidden="true">❔</span> 사용법</button>
             <button id="btn-toggle-theme" class="tool theme-toggle-btn" title="다크 모드 / 라이트 모드 전환"><span class="toolbar-icon" aria-hidden="true" id="theme-toggle-icon">🌙</span> <span id="theme-toggle-text">다크</span></button>
+            <button id="btn-pwa-install" class="tool pwa-btn" title="휴대폰, 태블릿, PC에 전용 앱으로 설치"><span class="toolbar-icon" aria-hidden="true">📲</span> 앱설치</button>
             <button id="btn-print-report" class="tool topbar-ai-report-btn ai-action" title="AI가 데이터를 정밀 분석하여 보고서를 자동으로 작성합니다">AI 자동 보고서</button>
             <button id="btn-fullscreen" class="tool" title="전체화면"><span class="toolbar-icon" aria-hidden="true">⛶</span></button>
         </div>
@@ -163,6 +168,10 @@
         <button type="button" class="mobile-action" data-mobile-target="btn-toggle-theme">
             <span class="mobile-action-icon" aria-hidden="true" id="mobile-theme-icon">🌓</span>
             <span>테마</span>
+        </button>
+        <button type="button" id="mobile-pwa-install" class="mobile-action pwa-install-btn" title="스마트폰/태블릿에 앱으로 설치">
+            <span class="mobile-action-icon" aria-hidden="true">📲</span>
+            <span>앱설치</span>
         </button>
     <button id="mobile-gpu-engine-badge" class="tool" title="GPU 가속 엔진 상태 및 실시간 FPS (클릭하여 사양 및 성능 확인)">
       <span class="toolbar-icon" aria-hidden="true">⚡</span>
@@ -921,6 +930,23 @@
         </div>
     </div>
 
+    <!-- iOS 사파리 홈 화면 추가(PWA 설치) 안내 모달 -->
+    <div id="pwa-ios-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-content glass-panel" style="max-width: 420px; text-align: center; padding: 24px; border-radius: 16px;">
+            <div style="font-size: 40px; margin-bottom: 12px;">📲</div>
+            <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 8px;">아이폰/아이패드 앱 설치 방법</h3>
+            <p style="font-size: 14px; color: #94a3b8; line-height: 1.6; margin-bottom: 16px;">
+                Safari 브라우저에서 아래 순서대로 진행하시면<br>홈 화면에 전용 앱으로 즉시 설치됩니다.
+            </p>
+            <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 14px; text-align: left; font-size: 13px; line-height: 1.8; margin-bottom: 20px;">
+                1️⃣ Safari 브라우저 하단의 <b>[공유 버튼 (􀈂)]</b>을 누릅니다.<br>
+                2️⃣ 메뉴를 스크롤하여 <b>[홈 화면에 추가 ⊞]</b>를 누릅니다.<br>
+                3️⃣ 우측 상단의 <b>[추가]</b>를 누르면 홈 화면에 앱 아이콘이 생성됩니다!
+            </div>
+            <button id="btn-close-pwa-ios-modal" type="button" class="btn-primary" style="width: 100%; padding: 12px; border-radius: 8px; border: none; cursor: pointer; font-weight: 600; background: #3b82f6; color: #fff;">확인 완료</button>
+        </div>
+    </div>
+
     <!-- =======================================================
          11. Three.js 모듈 Import Map 설정 및 메인 로직 로드
          ======================================================= -->
@@ -934,16 +960,5 @@
     </script>
     <!-- ES6 모듈 방식으로 메인 자바스크립트 실행 -->
     <script type="module" src="main.js"></script>
-<script>
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js')
-      .then(reg => console.log('✅ ServiceWorker 등록 성공, scope:', reg.scope))
-      .catch(err => console.error('❌ ServiceWorker 등록 실패:', err));
-  });
-} else {
-  console.warn('⚠️ 현재 브라우저는 Service Worker 를 지원하지 않습니다.');
-}
-</script>
 </body>
 </html>
