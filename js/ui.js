@@ -249,11 +249,8 @@ export function updateSamsungRamPlusUI() {
 
     if (modalMemory) {
         const base = sysInfo.deviceMemory;
-        if (isRamPlusOn && parseFloat(base) >= 8) {
-            modalMemory.textContent = `${base} + RAM Plus`;
-        } else {
-            modalMemory.textContent = base;
-        }
+        const display = isRamPlusOn ? `${base} + RAM Plus` : base;
+        modalMemory.textContent = display;
     }
 }
 
