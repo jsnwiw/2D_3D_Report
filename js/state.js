@@ -152,36 +152,33 @@ export function getSystemInfo() {
     let deviceMemoryDisplay = '16 GB';
 
     if (deviceType === 'mobile' || deviceType === 'tablet') {
-        // 스마트폰 및 태블릿 환경: 하드웨어 성능 기반 자동 감지 (최대 16GB)
-        if (cpuCores >= 8) {
-            deviceMemoryGB = 16;
-            deviceMemory = '16GB RAM';
-            deviceMemoryDisplay = '16 GB';
-        } else if (cpuCores >= 6) {
-            deviceMemoryGB = 12;
-            deviceMemory = '12GB RAM';
-            deviceMemoryDisplay = '12 GB';
+        // 스마트폰 및 태블릿 환경: 브라우저 실측 API 및 AP 하드웨어 기반 감지
+        if (typeof navigator.deviceMemory === 'number' && navigator.deviceMemory > 0) {
+            if (navigator.deviceMemory >= 8) {
+                // 브라우저 최대 8GB+ 보고: 최신 플래그십은 16GB까지 물리 램 지원
+                deviceMemoryGB = cpuCores >= 8 ? 16 : 12;
+            } else {
+                // 4GB, 6GB 등 중보급형 기기 실제 램 정확히 반영
+                deviceMemoryGB = navigator.deviceMemory;
+            }
         } else {
-            deviceMemoryGB = 8;
-            deviceMemory = '8GB RAM';
-            deviceMemoryDisplay = '8 GB';
+            // navigator.deviceMemory 미지원 환경 (iOS Safari 등)
+            deviceMemoryGB = (deviceType === 'tablet' || cpuCores >= 8) ? 16 : 8;
         }
+        deviceMemory = `${deviceMemoryGB}GB RAM`;
+        deviceMemoryDisplay = `${deviceMemoryGB} GB`;
     } else {
         // 컴퓨터 / 노트북(데스크톱) 환경: CPU 및 하드웨어 사양 기반 자동 감지
         if (cpuCores >= 20 || /rtx\s*(4090|3090)|quadro|titan/i.test(rawGpuRenderer)) {
             deviceMemoryGB = 64;
-            deviceMemory = '64GB RAM';
-            deviceMemoryDisplay = '64 GB';
         } else if (cpuCores >= 16 || /rtx\s*(4080|4070|3080)/i.test(rawGpuRenderer)) {
             deviceMemoryGB = 32;
-            deviceMemory = '32GB RAM';
-            deviceMemoryDisplay = '32 GB';
         } else {
-            // i5 / i7 / Ryzen 등 표준 데스크톱·노트북 사양 16GB 자동 감지
+            // i5 / i7 / Ryzen 등 4코어 이상 데스크톱·노트북 사양 16GB 자동 감지
             deviceMemoryGB = 16;
-            deviceMemory = '16GB RAM';
-            deviceMemoryDisplay = '16 GB';
         }
+        deviceMemory = `${deviceMemoryGB}GB RAM`;
+        deviceMemoryDisplay = `${deviceMemoryGB} GB`;
     }
 
     const screenRes = `${window.screen.width} × ${window.screen.height} (DPR: ${window.devicePixelRatio || 1})`;
@@ -235,6 +232,12 @@ let _cachedIsSamsung = null;
  * - User-Agent 문자열, SM- 모델명 식별자, UserAgentData Client Hints, Xclipse GPU 등 다단계 검증
  */
 export function isSamsungGalaxyDevice() {
+    // 데스크톱 / PC 환경은 삼성 폰/태블릿이 아니므로 무조건 false
+    if (getDeviceType() === 'desktop') {
+        _cachedIsSamsung = false;
+        return false;
+    }
+
     if (_cachedIsSamsung !== null) return _cachedIsSamsung;
 
     const ua = (navigator.userAgent || '').toLowerCase();

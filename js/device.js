@@ -2,25 +2,39 @@
 // Returns one of: "mobile", "tablet", "desktop"
 export function getDeviceType() {
   const ua = (navigator.userAgent || '').toLowerCase();
-  const isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
-  const width = Math.min(window.innerWidth, window.screen.width);
+  const platform = (navigator.platform || '').toLowerCase();
 
-  // 1. 태블릿 판별 (iPad, Android Tablet 등)
-  if (/ipad|tablet|(android(?!.*mobile))/i.test(ua) || (isTouch && /macintosh/i.test(ua) && navigator.maxTouchPoints > 1)) {
-    return 'tablet';
+  // 1. 모바일(스마트폰) 명시적 감지 (iPhone, Android Mobile 등)
+  if (/iphone|ipod/i.test(ua) || /iphone|ipod/i.test(platform)) {
+    return 'mobile';
   }
-
-  // 2. 모바일(스마트폰) 판별 (iPhone, Android Mobile 등)
-  if (/iphone|ipod|mobile/i.test(ua) || (isTouch && width <= 600)) {
+  if (/android/i.test(ua) && /mobile/i.test(ua)) {
     return 'mobile';
   }
 
-  // 3. 터치 디스플레이 크기 기반 보조 감지
-  if (isTouch && width <= 1180) {
+  // 2. 태블릿 명시적 감지 (iPad, Android Tablet 등)
+  if (/ipad/i.test(ua) || /ipad/i.test(platform)) {
+    return 'tablet';
+  }
+  if (/android/i.test(ua) && !/mobile/i.test(ua)) {
+    return 'tablet';
+  }
+  // iPadOS 13+ 데스크톱 사파리 모드 대응 (Mac UA + 멀티터치 지원)
+  if (/macintosh|mac os x/i.test(ua) && (navigator.maxTouchPoints || 0) > 1) {
     return 'tablet';
   }
 
-  // 그 외는 데스크톱 PC
+  // 3. 데스크톱 PC 명시적 감지 (Windows, Mac, Linux 등 PC 환경)
+  if (/win/i.test(platform) || /windows nt/i.test(ua) || /macintosh|macintel/i.test(platform) || (/linux/i.test(platform) && !/android/i.test(ua))) {
+    return 'desktop';
+  }
+
+  // 4. 기타 보조 판별 (터치 스크린 폭 기반)
+  const isTouch = ('ontouchstart' in window) || ((navigator.maxTouchPoints || 0) > 0);
+  const screenMin = Math.min(window.screen.width, window.screen.height);
+  if (isTouch && screenMin <= 500) return 'mobile';
+  if (isTouch && screenMin <= 900) return 'tablet';
+
   return 'desktop';
 }
 

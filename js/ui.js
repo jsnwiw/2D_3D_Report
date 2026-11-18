@@ -327,6 +327,7 @@ export function drawFpsSparkline() {
 
 export function setupGpuModal() {
     const badge = $('gpu-engine-badge');
+    const mobileBadge = $('mobile-gpu-engine-badge');
     const modal = $('gpu-info-modal');
     const btnClose = $('btn-close-gpu-modal');
     const modalPlatform = $('modal-system-platform');
@@ -339,7 +340,7 @@ export function setupGpuModal() {
     const modalGpuArchitecture = $('modal-gpu-architecture');
     const modalGpuFeatures = $('modal-gpu-features');
 
-    badge?.addEventListener('click', () => {
+    const openGpuModal = () => {
         if (!modal) return;
         const sysInfo = getSystemInfo();
         if (modalPlatform) modalPlatform.textContent = `${sysInfo.osName} (${sysInfo.platform})`;
@@ -356,7 +357,10 @@ export function setupGpuModal() {
         if (modalGpuFeatures) modalGpuFeatures.textContent = `${appState.gpuEngineState.featuresCount}개 하드웨어 기능 활성화됨`;
         updateGpuModalLivePerformance();
         modal.style.display = 'flex';
-    });
+    };
+
+    badge?.addEventListener('click', openGpuModal);
+    mobileBadge?.addEventListener('click', openGpuModal);
 
     // 삼성 RAM Plus 상태 토글 버튼 이벤트 등록
     const btnToggleRamPlus = $('btn-toggle-ramplus');
