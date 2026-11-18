@@ -133,7 +133,11 @@ export function getSystemInfo() {
     // 4. 상세 기기 및 시스템 환경 스펙 감지
     let deviceMemory = '기본 지원';
     if (navigator.deviceMemory) {
-        deviceMemory = `약 ${navigator.deviceMemory}GB RAM`;
+        if (navigator.deviceMemory >= 8) {
+            deviceMemory = '약 8GB 이상 (브라우저 규격 최대 8GB+)';
+        } else {
+            deviceMemory = `약 ${navigator.deviceMemory}GB RAM`;
+        }
     }
 
     const screenRes = `${window.screen.width} × ${window.screen.height} (DPR: ${window.devicePixelRatio || 1})`;
@@ -181,8 +185,102 @@ export function getSystemInfo() {
         colorDepth,
         maxTextureSize,
         maxViewportDims,
-        networkType
+        networkType,
+        isSamsungGalaxy: isSamsungGalaxyDevice()
     };
+}
+
+let _cachedIsSamsung = null;
+
+/**
+ * 삼성 갤럭시(Galaxy) 모델 여부 정밀 감지
+ * - User-Agent 문자열, SM- 모델명 식별자, UserAgentData Client Hints, Xclipse GPU 등 다단계 검증
+ */
+export function isSamsungGalaxyDevice() {
+    if (_cachedIsSamsung !== null) return _cachedIsSamsung;
+
+    const ua = (navigator.userAgent || '').toLowerCase();
+    
+    // 1. 삼성 갤럭시 명시적 문자열 및 삼성 브라우저 검사
+    if (/samsung|galaxy|samsungbrowser/.test(ua)) {
+        _cachedIsSamsung = true;
+        return true;
+    }
+    
+    // 2. 삼성 모바일 고유 기기 모델명 패턴 (SM-S, SM-G, SM-F, SM-A, SM-M, SM-N, SM-X, SM-T 등)
+    if (/\bsm-[s|g|f|a|m|n|x|t][0-9]{3,4}[a-z0-9]*\b/i.test(ua) || /\bsm-[a-z0-9]+\b/i.test(ua)) {
+        _cachedIsSamsung = true;
+        return true;
+    }
+    if (/\b(sc|shv)-[0-9a-z]+\b/i.test(ua)) {
+        _cachedIsSamsung = true;
+        return true;
+    }
+
+    // 3. UserAgentData Client Hints Brands 검사
+    if (navigator.userAgentData?.brands) {
+        if (navigator.userAgentData.brands.some(b => /samsung/i.test(b.brand))) {
+            _cachedIsSamsung = true;
+            return true;
+        }
+    }
+
+    // 4. WebGL GPU 렌더러 검사 (Samsung Exynos Xclipse GPU 등)
+    try {
+        const c = document.createElement('canvas');
+        const gl = c.getContext('webgl');
+        if (gl) {
+            const dbg = gl.getExtension('WEBGL_debug_renderer_info');
+            if (dbg) {
+                const ren = (gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL) || '').toLowerCase();
+                const ven = (gl.getParameter(dbg.UNMASKED_VENDOR_WEBGL) || '').toLowerCase();
+                if (/xclipse|samsung/.test(ren) || /samsung/.test(ven)) {
+                    _cachedIsSamsung = true;
+                    return true;
+                }
+            }
+        }
+    } catch (e) {}
+
+    _cachedIsSamsung = false;
+    return false;
+}
+
+// User-Agent Client Hints 비동기 모델명 조회 (크롬 모바일 User-Agent 감축 정책 대응)
+if (typeof navigator !== 'undefined' && navigator.userAgentData?.getHighEntropyValues) {
+    navigator.userAgentData.getHighEntropyValues(['model']).then(data => {
+        if (data?.model && /sm-|galaxy|samsung/i.test(data.model)) {
+            _cachedIsSamsung = true;
+            if (typeof window !== 'undefined' && window.__refreshSamsungRamPlusUI) {
+                window.__refreshSamsungRamPlusUI();
+            }
+        }
+    }).catch(() => {});
+}
+
+/**
+ * 삼성 RAM Plus 켜짐/꺼짐 상태 확인
+ * - 삼성 One UI 출고 기본값은 ON (켜짐)
+ * - 사용자가 기기 설정과 동일하게 전환한 상태(localStorage)를 동기화
+ */
+export function getRamPlusState() {
+    try {
+        const saved = localStorage.getItem('galaxy_ram_plus_enabled');
+        if (saved !== null) {
+            return saved === 'true';
+        }
+    } catch (e) {}
+    // 삼성 갤럭시 One UI의 기본값은 켜짐(ON)
+    return true;
+}
+
+/**
+ * 삼성 RAM Plus 켜짐/꺼짐 상태 저장
+ */
+export function setRamPlusState(enabled) {
+    try {
+        localStorage.setItem('galaxy_ram_plus_enabled', enabled ? 'true' : 'false');
+    } catch (e) {}
 }
 
 // 전역 공유 상태 컨테이너

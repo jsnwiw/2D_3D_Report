@@ -4,7 +4,7 @@
  * ==============================================================================
  */
 import * as THREE from 'three';
-import { $, appState, showToast, getSystemInfo } from './state.js';
+import { $, appState, showToast, getSystemInfo, isSamsungGalaxyDevice, getRamPlusState, setRamPlusState } from './state.js';
 import { loadAndParseFile } from './parser.js';
 import { update3DTheme } from './renderer3d.js';
 
@@ -189,14 +189,10 @@ export function initSystemInfo() {
 
     if (modalPlatform) modalPlatform.textContent = `${info.osName} (${info.platform})`;
     if (modalCpu) modalCpu.textContent = `${info.cpuBrand} • ${info.cpuCores} 논리 코어`;
-    if (modalMemory) {
-    modalMemory.textContent = info.deviceMemory;
-    // If device is Samsung Galaxy, indicate RAM Plus support
-    if (/samsung|galaxy/.test(navigator.userAgent.toLowerCase())) {
-        const ramPlusInfo = 'RAM Plus 사용 가능';
-        modalMemory.textContent = `${modalMemory.textContent} • ${ramPlusInfo}`;
-    }
-}
+    
+    // 삼성 갤럭시 전용 RAM Plus 및 메모리 표시 동기화
+    updateSamsungRamPlusUI();
+
     if (modalGpuApi) modalGpuApi.textContent = appState.gpuEngineState.backendName;
     if (modalGpuDevice) modalGpuDevice.textContent = info.cleanGpuModel || appState.gpuEngineState.gpuName;
     if (modalGpuVendor) modalGpuVendor.textContent = info.gpuBrand || appState.gpuEngineState.vendor;
@@ -204,6 +200,60 @@ export function initSystemInfo() {
     if (modalGpuArchitecture) modalGpuArchitecture.textContent = appState.gpuEngineState.architecture;
     if (modalGpuFeatures && appState.gpuEngineState.featuresCount > 0) {
         modalGpuFeatures.textContent = `${appState.gpuEngineState.featuresCount}개 하드웨어 기능 활성화됨`;
+    }
+}
+
+/**
+ * 삼성 갤럭시 모델 한정 RAM Plus 가상 메모리 동적 UI 처리
+ * - 삼성 갤럭시 기기가 아닌 경우 RAM Plus 항목을 완전히 숨김
+ * - 삼성 갤럭시 기기에서 RAM Plus가 켜져 있을 때만 RAM Plus 표시 및 뱃지 활성화
+ */
+export function updateSamsungRamPlusUI() {
+    const isGalaxy = isSamsungGalaxyDevice();
+    const rowRamPlus = $('row-samsung-ramplus');
+    const modalMemory = $('modal-system-memory');
+    const statusEl = $('modal-ramplus-status');
+    const btnToggle = $('btn-toggle-ramplus');
+    const sysInfo = getSystemInfo();
+
+    if (!isGalaxy) {
+        // 삼성 갤럭시가 아닌 기기(아이폰, PC, 타 안드로이드 등)는 RAM Plus 관련 UI 완전 비활성화
+        if (rowRamPlus) rowRamPlus.style.display = 'none';
+        if (modalMemory) modalMemory.textContent = sysInfo.deviceMemory;
+        return;
+    }
+
+    // 삼성 갤럭시 모델인 경우:
+    const isRamPlusOn = getRamPlusState();
+
+    if (rowRamPlus) {
+        rowRamPlus.style.display = 'flex';
+    }
+
+    if (statusEl) {
+        if (isRamPlusOn) {
+            statusEl.textContent = '🟢 켜짐 (가상 메모리 +4GB~8GB)';
+            statusEl.style.color = '';
+            statusEl.className = 'info-val highlight';
+        } else {
+            statusEl.textContent = '⚪ 꺼짐';
+            statusEl.style.color = '#94a3b8';
+            statusEl.className = 'info-val';
+        }
+    }
+
+    if (btnToggle) {
+        btnToggle.textContent = isRamPlusOn ? '꺼짐으로 변경' : '켜짐으로 변경';
+        btnToggle.title = isRamPlusOn ? '클릭 시 RAM Plus 꺼짐 상태로 변경' : '클릭 시 RAM Plus 켜짐 상태로 변경';
+    }
+
+    if (modalMemory) {
+        const base = sysInfo.deviceMemory;
+        if (isRamPlusOn && parseFloat(base) >= 8) {
+            modalMemory.textContent = `${base} + RAM Plus`;
+        } else {
+            modalMemory.textContent = base;
+        }
     }
 }
 
@@ -289,7 +339,10 @@ export function setupGpuModal() {
         const sysInfo = getSystemInfo();
         if (modalPlatform) modalPlatform.textContent = `${sysInfo.osName} (${sysInfo.platform})`;
         if (modalCpu) modalCpu.textContent = `${sysInfo.cpuBrand} • ${sysInfo.cpuCores} 논리 코어`;
-        if (modalMemory) modalMemory.textContent = sysInfo.deviceMemory;
+        
+        // 삼성 갤럭시 모델 한정 RAM Plus 및 메모리 동기화
+        updateSamsungRamPlusUI();
+
         if (modalGpuApi) modalGpuApi.textContent = appState.gpuEngineState.backendName;
         if (modalGpuDevice) modalGpuDevice.textContent = sysInfo.cleanGpuModel || appState.gpuEngineState.gpuName;
         if (modalGpuVendor) modalGpuVendor.textContent = sysInfo.gpuBrand || appState.gpuEngineState.vendor;
@@ -298,6 +351,18 @@ export function setupGpuModal() {
         if (modalGpuFeatures) modalGpuFeatures.textContent = `${appState.gpuEngineState.featuresCount}개 하드웨어 기능 활성화됨`;
         updateGpuModalLivePerformance();
         modal.style.display = 'flex';
+    });
+
+    // 삼성 RAM Plus 상태 토글 버튼 이벤트 등록
+    const btnToggleRamPlus = $('btn-toggle-ramplus');
+    btnToggleRamPlus?.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const current = getRamPlusState();
+        const next = !current;
+        setRamPlusState(next);
+        updateSamsungRamPlusUI();
+        showToast(`삼성 RAM Plus: ${next ? '🟢 켜짐 (+4GB~8GB)' : '⚪ 꺼짐'}으로 전환되었습니다.`);
     });
 
     btnClose?.addEventListener('click', () => {
@@ -312,6 +377,7 @@ export function setupGpuModal() {
             updateGpuModalLivePerformance();
         }
     };
+    window.__refreshSamsungRamPlusUI = updateSamsungRamPlusUI;
 }
 
 /**

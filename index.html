@@ -864,6 +864,14 @@
                         <span class="info-label">💾 기기 메모리 (RAM)</span>
                         <span class="info-val" id="modal-system-memory">감지 중...</span>
                     </div>
+                    <!-- 삼성 갤럭시 전용 RAM Plus 가상 메모리 행 (갤럭시 기기에서만 동적으로 활성화) -->
+                    <div class="gpu-info-row" id="row-samsung-ramplus" style="display: none;">
+                        <span class="info-label">🚀 삼성 RAM Plus (가상 메모리)</span>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <span class="info-val highlight" id="modal-ramplus-status">🟢 켜짐 (+4GB~8GB)</span>
+                            <button id="btn-toggle-ramplus" type="button" class="btn-ramplus-toggle" title="삼성 One UI 디바이스 케어 설정과 일치하도록 켜짐/꺼짐 변경">상태 변경</button>
+                        </div>
+                    </div>
                     <div class="gpu-info-row">
                         <span class="info-label">🏭 GPU 제조사 / 브랜드</span>
                         <span class="info-val" id="modal-gpu-vendor">감지 중...</span>

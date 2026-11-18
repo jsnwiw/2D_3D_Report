@@ -256,6 +256,33 @@ body.dark-mode .gpu-info-row .info-val.performance {
     color: #818cf8;
 }
 
+/* 삼성 RAM Plus 토글 버튼 */
+.btn-ramplus-toggle {
+    font-size: 11px;
+    padding: 3px 9px;
+    border-radius: var(--btn-radius, 6px);
+    border: 1px solid var(--theme-border, #cbd5e1);
+    background: var(--card-surface, #ffffff);
+    color: var(--theme-primary, #3b82f6);
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+.btn-ramplus-toggle:hover {
+    background: #3b82f6;
+    color: #ffffff;
+    border-color: #3b82f6;
+}
+body.dark-mode .btn-ramplus-toggle {
+    background: #1e293b;
+    border-color: #334155;
+    color: #93c5fd;
+}
+body.dark-mode .btn-ramplus-toggle:hover {
+    background: #3b82f6;
+    color: #ffffff;
+}
+
 /* 실시간 FPS 성능 미터 및 상태 뱃지 */
 .fps-meter-cell {
     display: flex;
